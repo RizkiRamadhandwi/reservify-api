@@ -1,0 +1,16 @@
+fitur 
+1. Login -POST (generate token) expired 1 jam (alief)
+2. get all rooms (ALL ROLE) -GET
+3. Request booking rooms (employee & admin) -POST
+4. permission list (GA) -GET
+5. update permission (GA) -PUT
+6. update room status (GA) -PUT
+7. list transaction (admin & GA) -GET
+8. detail transaction by employee ID (employee) -GET
+
+
+format yyyy-mm-dd hh-mm-ss
+
+pertanyaan : apakah laporannya dibuat otomatis dalam applikasi atau tidak?
+(dibuat 2 endpoint yang mana memfilter tanggal dan download)
+
