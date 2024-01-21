@@ -12,15 +12,14 @@ import (
 	"database/sql"
 	"log"
 	"math"
-	"net/http"
 )
 
 type RoomFacilityRepository interface {
-	CreateRoomFacility(payload entity.RoomFacility, newQuantity int) (entity.RoomFacility, int, error)
+	CreateRoomFacility(payload entity.RoomFacility, newQuantity int) (entity.RoomFacility, error)
 	ListRoomFacility(page, size int) ([]entity.RoomFacility, model.Paging, error)
-	GetRoomFacilityById(id string) (entity.RoomFacility, int, error)
-	UpdateRoomFacility(payload entity.RoomFacility, newFacilityQuantity int) (entity.RoomFacility, int, error)
-	GetQuantityFacilityByID(id string) (int, int, error)
+	GetRoomFacilityById(id string) (entity.RoomFacility, error)
+	UpdateRoomFacility(payload entity.RoomFacility, newFacilityQuantity int) (entity.RoomFacility, error)
+	GetQuantityFacilityByID(id string) (int, error)
 }
 
 type roomFacilityRepository struct {
@@ -28,18 +27,14 @@ type roomFacilityRepository struct {
 }
 
 // get quantity from facilities by facility ID
-func (t *roomFacilityRepository) GetQuantityFacilityByID(id string) (int, int, error) {
+func (t *roomFacilityRepository) GetQuantityFacilityByID(id string) (int, error) {
 	var quantity int
 	err := t.db.QueryRow(config.GetQuantityFacilityByID, id).Scan(&quantity)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Println("roomFacilityRepository.QueryGetQuantityFacilityByID:", err.Error())
-			return 0, http.StatusBadRequest, err
-		}
 		log.Println("roomFacilityRepository.QueryGetQuantityFacilityByID:", err.Error())
-		return 0, http.StatusInternalServerError, err
+		return quantity, err
 	}
-	return quantity, http.StatusOK, nil
+	return quantity, nil
 }
 
 // get all room facilities (ADMIN) -GET
@@ -88,7 +83,7 @@ func (t *roomFacilityRepository) ListRoomFacility(page, size int) ([]entity.Room
 }
 
 // get by ID room facilities (ADMIN) -GET
-func (t *roomFacilityRepository) GetRoomFacilityById(id string) (entity.RoomFacility, int, error) {
+func (t *roomFacilityRepository) GetRoomFacilityById(id string) (entity.RoomFacility, error) {
 	var roomFacility entity.RoomFacility
 	err := t.db.QueryRow(config.SelectRoomFacilityByID, id).Scan(
 		&roomFacility.ID,
@@ -101,23 +96,23 @@ func (t *roomFacilityRepository) GetRoomFacilityById(id string) (entity.RoomFaci
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Println("roomFacilityRepository.QueryRowSelectRoomFacilityByID:", err.Error())
-			return entity.RoomFacility{}, http.StatusBadRequest, err
+			return entity.RoomFacility{}, err
 		}
 		log.Println("roomFacilityRepository.QueryRowSelectRoomFacilityByID:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
-	return roomFacility, http.StatusOK, nil
+	return roomFacility, nil
 }
 
 // create room facilities (ADMIN) -POST
-func (t *roomFacilityRepository) CreateRoomFacility(payload entity.RoomFacility, newFacilityQuantity int) (entity.RoomFacility, int, error) {
+func (t *roomFacilityRepository) CreateRoomFacility(payload entity.RoomFacility, newFacilityQuantity int) (entity.RoomFacility, error) {
 	var roomFacilities entity.RoomFacility
 
 	// begin transaction
 	tx, err := t.db.Begin()
 	if err != nil {
 		log.Println("roomFacilityRepository.BeginTransaction:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	// insert data
@@ -133,14 +128,14 @@ func (t *roomFacilityRepository) CreateRoomFacility(payload entity.RoomFacility,
 			&payload.UpdatedAt)
 	if err != nil {
 		log.Println("roomFacilityRepository.QueryInsertData:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	// reduce quantity in facility
 	_, err = tx.Exec(config.UpdateQuantityFacilityByID, newFacilityQuantity, payload.FacilityId)
 	if err != nil {
 		log.Println("roomFacilityRepository.QueryReduceQuantity:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	// commit transaction
@@ -148,22 +143,22 @@ func (t *roomFacilityRepository) CreateRoomFacility(payload entity.RoomFacility,
 	if err != nil {
 		tx.Rollback()
 		log.Println("roomFacilityRepository.TransactionCommit:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	roomFacilities = payload
-	return roomFacilities, http.StatusOK, err
+	return roomFacilities, err
 }
 
 // update room facilites (ADMIN) -GET
-func (t *roomFacilityRepository) UpdateRoomFacility(payload entity.RoomFacility, newFacilityQuantity int) (entity.RoomFacility, int, error) {
+func (t *roomFacilityRepository) UpdateRoomFacility(payload entity.RoomFacility, newFacilityQuantity int) (entity.RoomFacility, error) {
 	var roomFacility entity.RoomFacility
 
 	// begin transaction
 	tx, err := t.db.Begin()
 	if err != nil {
 		log.Println("roomFacilityRepository.BeginTransaction:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	// update room-facility
@@ -176,7 +171,7 @@ func (t *roomFacilityRepository) UpdateRoomFacility(payload entity.RoomFacility,
 		payload.ID).Scan(&payload.CreatedAt, &payload.UpdatedAt)
 	if err != nil {
 		log.Println("roomFacilityRepository.UpdateRoomFacility:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	// change facility quantity
@@ -184,7 +179,7 @@ func (t *roomFacilityRepository) UpdateRoomFacility(payload entity.RoomFacility,
 		_, err = tx.Exec(config.UpdateQuantityFacilityByID, newFacilityQuantity, payload.FacilityId)
 		if err != nil {
 			log.Println("roomFacilityRepository.QueryChangeQuantity:", err.Error())
-			return entity.RoomFacility{}, http.StatusInternalServerError, err
+			return entity.RoomFacility{}, err
 		}
 	}
 
@@ -193,14 +188,13 @@ func (t *roomFacilityRepository) UpdateRoomFacility(payload entity.RoomFacility,
 	if err != nil {
 		tx.Rollback()
 		log.Println("roomFacilityRepository.CommitTransaction:", err.Error())
-		return entity.RoomFacility{}, http.StatusInternalServerError, err
+		return entity.RoomFacility{}, err
 	}
 
 	roomFacility = payload
-	return roomFacility, http.StatusCreated, err
+	return roomFacility, err
 }
 
 func NewRoomFacilityRepository(db *sql.DB) RoomFacilityRepository {
 	return &roomFacilityRepository{db: db}
 }
-

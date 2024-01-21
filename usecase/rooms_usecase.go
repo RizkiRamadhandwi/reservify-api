@@ -38,15 +38,12 @@ func (r *roomUseCase) FindRoomByID(id string) (entity.Room, error) {
 
 // RegisterNewRoom implements RoomUseCase.
 func (r *roomUseCase) RegisterNewRoom(payload entity.Room) (entity.Room, error) {
-	if payload.Name == "" || payload.RoomType == "" || payload.Capacity == 0 {
+	if payload.Name == "" || payload.RoomType == "" || payload.Capacity == 0 || payload.Status == "" {
 		return entity.Room{}, fmt.Errorf("oops, field required")
 	}
-	if payload.Status == "" {
-		payload.Status = "available"
-	} else {
-		payload.Status = strings.ToLower(payload.Status)
-	}
-	// payload.UpdatedAt = time.Now()
+
+	payload.Status = strings.ToLower(payload.Status)
+
 	room, err := r.repo.Create(payload)
 	if err != nil {
 		return entity.Room{}, fmt.Errorf("failed to create a new room list: %v", err.Error())
@@ -56,16 +53,12 @@ func (r *roomUseCase) RegisterNewRoom(payload entity.Room) (entity.Room, error) 
 
 // UpdateRoomDetail implements RoomUseCase.
 func (r *roomUseCase) UpdateRoomDetail(payload entity.Room) (entity.Room, error) {
-	if payload.ID == "" || payload.Name == "" || payload.RoomType == "" || payload.Capacity == 0 {
+	if payload.ID == "" || payload.Name == "" || payload.RoomType == "" || payload.Capacity == 0 || payload.Status == "" {
 		return entity.Room{}, fmt.Errorf("oops, field required")
 	}
-	if payload.Status == "" {
-		payload.Status = "available"
-	} else {
-		payload.Status = strings.ToLower(payload.Status)
-	}
 
-	// payload.UpdatedAt = time.Now()
+	payload.Status = strings.ToLower(payload.Status)
+
 	room, err := r.repo.Update(payload)
 	if err != nil {
 		return entity.Room{}, fmt.Errorf("failed to update room with ID %s: %v", payload.ID, err.Error())
@@ -75,16 +68,12 @@ func (r *roomUseCase) UpdateRoomDetail(payload entity.Room) (entity.Room, error)
 
 // UpdateRoomStatus implements RoomUseCase.
 func (r *roomUseCase) UpdateRoomStatus(payload entity.Room) (entity.Room, error) {
-	if payload.ID == "" {
+	if payload.ID == "" || payload.Status == "" {
 		return entity.Room{}, fmt.Errorf("oops, field required")
 	}
-	if payload.Status == "" {
-		payload.Status = "available"
-	} else {
-		payload.Status = strings.ToLower(payload.Status)
-	}
 
-	// payload.UpdatedAt = time.Now()
+	payload.Status = strings.ToLower(payload.Status)
+
 	room, err := r.repo.UpdateStatus(payload)
 	if err != nil {
 		return entity.Room{}, fmt.Errorf("failed to update room with ID %s: %v", payload.ID, err.Error())

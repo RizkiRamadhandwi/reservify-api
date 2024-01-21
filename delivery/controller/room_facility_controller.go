@@ -9,8 +9,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/google/uuid"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,31 +22,18 @@ func (t *RoomFacilityController) createRoomFacilityHandler(ctx *gin.Context) {
 	var payload entity.RoomFacility
 	err := ctx.ShouldBindJSON(&payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// check required field
 	if payload.RoomId == "" || payload.FacilityId == "" || payload.Quantity == 0 {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, "field roomId, facilityId, and quantity are required")
+		common.SendErrorResponse(ctx, http.StatusBadRequest, "oops, field required")
 		return
 	}
 
-	// check valid uuid
-	_, err = uuid.Parse(payload.RoomId)
+	transactions, err := t.transactionUC.AddRoomFacilityTransaction(payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, "invalid uuid for roomId field")
-		return
-	}
-	_, err = uuid.Parse(payload.FacilityId)
-	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, "invalid uuid for facilityId field")
-		return
-	}
-
-	transactions, statusCode, err := t.transactionUC.AddRoomFacilityTransaction(payload)
-	if err != nil {
-		common.SendErrorResponse(ctx, statusCode, err.Error())
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	common.SendCreateResponse(ctx, transactions, "Created")
@@ -73,9 +58,9 @@ func (t *RoomFacilityController) listRoomFacilityHandler(ctx *gin.Context) {
 
 func (t *RoomFacilityController) getRoomFacilityById(ctx *gin.Context) {
 	id := ctx.Param("id")
-	transactions, _, err := t.transactionUC.FindRoomFacilityById(id)
+	transactions, err := t.transactionUC.FindRoomFacilityById(id)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusNotFound, "transaction with transaction ID "+id+" not found")
+		common.SendErrorResponse(ctx, http.StatusNotFound, "Roomfacilities with ID "+id+" not found")
 		return
 	}
 
@@ -90,13 +75,13 @@ func (t *RoomFacilityController) updateRoomFacilityHandler(ctx *gin.Context) {
 	}
 
 	if payload.FacilityId == "" && payload.RoomId == "" && payload.Quantity == 0 {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, "required at least one of folowing field to update: roomId, facilityId, quantity")
+		common.SendErrorResponse(ctx, http.StatusBadRequest, "oops, field required")
 		return
 	}
 
-	transactions, statusCode, err := t.transactionUC.UpdateRoomFacilityTransaction(payload)
+	transactions, err := t.transactionUC.UpdateRoomFacilityTransaction(payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, statusCode, err.Error())
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	common.SendCreateResponse(ctx, transactions, "Updated")
@@ -116,4 +101,3 @@ func NewRoomFacilityController(transactionUC usecase.RoomFacilityUsecase, rg *gi
 		authMiddleware: authMiddleware,
 	}
 }
-

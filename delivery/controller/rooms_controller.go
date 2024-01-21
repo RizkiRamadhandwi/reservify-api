@@ -29,7 +29,7 @@ func (r *RoomController) createHandler(c *gin.Context) {
 
 	room, err := r.roomUC.RegisterNewRoom(payload)
 	if err != nil {
-		common.SendErrorResponse(c, http.StatusInternalServerError, err.Error())
+		common.SendErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	common.SendCreateResponse(c, room, "Created")
@@ -89,7 +89,7 @@ func (r *RoomController) updateDetailHandler(c *gin.Context) {
 
 	room, err := r.roomUC.UpdateRoomDetail(payload)
 	if err != nil {
-		common.SendErrorResponse(c, http.StatusInternalServerError, err.Error())
+		common.SendErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	common.SendCreateResponse(c, room, "Updated")

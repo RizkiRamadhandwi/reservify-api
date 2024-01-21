@@ -27,9 +27,10 @@ func (f *FacilitiesController) updateHandler(ctx *gin.Context) {
 
 	facility, err := f.facilitiesUC.EditFacilities(payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusNotFound, "not found ID "+payload.ID)
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	common.SendCreateResponse(ctx, facility, "Updated")
 }
 
@@ -37,11 +38,11 @@ func (f *FacilitiesController) getHandler(ctx *gin.Context) {
 	id := ctx.Param("id")
 	facility, err := f.facilitiesUC.FindFacilitiesById(id)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusNotFound, "not found ID "+id)
+		common.SendErrorResponse(ctx, http.StatusNotFound, "Facilities with ID "+id+" not found")
 		return
 	}
 
-	common.SendSingleResponse(ctx, facility, "ok")
+	common.SendSingleResponse(ctx, facility, "Ok")
 }
 
 func (f *FacilitiesController) listHandler(ctx *gin.Context) {
@@ -59,19 +60,19 @@ func (f *FacilitiesController) listHandler(ctx *gin.Context) {
 		response = append(response, f)
 	}
 
-	common.SendPagedResponse(ctx, response, paging, "ok")
+	common.SendPagedResponse(ctx, response, paging, "Ok")
 
 }
 
 func (f *FacilitiesController) createHandler(ctx *gin.Context) {
 	var payload entity.Facilities
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 	facility, err := f.facilitiesUC.RegisterNewFacilities(payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
 	common.SendCreateResponse(ctx, facility, "Created")

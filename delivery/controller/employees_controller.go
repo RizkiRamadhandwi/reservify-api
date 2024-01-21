@@ -22,13 +22,13 @@ func (e *EmployeeController) createHandler(ctx *gin.Context) {
 
 	var payload entity.Employee
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 	employee, err := e.employeeUC.RegisterNewEmployee(payload)
 
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 
 	}
@@ -63,15 +63,15 @@ func (e *EmployeeController) putHandler(ctx *gin.Context) {
 	var payload entity.Employee
 	err := ctx.ShouldBindJSON(&payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, "Failed to bind data")
+		common.SendErrorResponse(ctx, http.StatusBadGateway, "Failed to bind data")
 		return
 	}
 	employee, err := e.employeeUC.UpdateEmployee(payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusNotFound, err.Error())
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-	common.SendSingleResponse(ctx, employee, "Updated Successfully")
+	common.SendSingleResponse(ctx, employee, "Updated")
 
 }
 

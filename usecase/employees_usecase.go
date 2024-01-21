@@ -11,7 +11,7 @@ import (
 type EmployeesUseCase interface {
 	FindEmployeesByID(id string) (entity.Employee, error)
 	FindEmployeesByUsername(username string) (entity.Employee, error)
-	FindEmployeForLogin(username ,password string) (entity.Employee, error)
+	FindEmployeForLogin(username, password string) (entity.Employee, error)
 	RegisterNewEmployee(payload entity.Employee) (entity.Employee, error)
 	UpdateEmployee(payload entity.Employee) (entity.Employee, error)
 	ListAll(page, size int) ([]entity.Employee, model.Paging, error)
@@ -29,34 +29,38 @@ func (e *employeesUseCase) FindEmployeesByUsername(username string) (entity.Empl
 	return e.repo.GetEmployeesByUsername(username)
 }
 
-func (e *employeesUseCase)FindEmployeForLogin(username, password string) (entity.Employee, error){
+func (e *employeesUseCase) FindEmployeForLogin(username, password string) (entity.Employee, error) {
+	if username == "" && password == "" {
+		return entity.Employee{}, errors.New("username dan password harus diisi")
+	}
 	if username == "" {
 		return entity.Employee{}, errors.New("username harus diisi")
 	}
-	return e.repo.GetEmployeesByUsernameForLogin(username, password)
+	if password == "" {
+		return entity.Employee{}, errors.New("password harus diisi")
+	}
+
+	employee, err := e.repo.GetEmployeesByUsernameForLogin(username, password)
+	if err != nil {
+		return entity.Employee{}, errors.New("username atau password salah")
+	}
+	return employee, nil
 }
 
 // ListAll implements EmployeesUseCase.
 func (e *employeesUseCase) ListAll(page int, size int) ([]entity.Employee, model.Paging, error) {
-	// if page == 0 && size == 0 {
-	// 	page = 1
-	// 	size = 5
-	// }
 	return e.repo.List(page, size)
 }
 
 // FindEmployeesByID implements EmployeesUseCase.
 func (e *employeesUseCase) FindEmployeesByID(id string) (entity.Employee, error) {
-	if id == "" {
-		return entity.Employee{}, errors.New("id harus diisi")
-	}
 	return e.repo.GetEmployeesByID(id)
 }
 
 // RegisterNewEmployee implements EmployeesUseCase.
 func (e *employeesUseCase) RegisterNewEmployee(payload entity.Employee) (entity.Employee, error) {
 	if payload.Name == "" || payload.Password == "" || payload.Role == "" || payload.Division == "" || payload.Position == "" || payload.Contact == "" {
-		return entity.Employee{}, fmt.Errorf("oops, field required")
+		return entity.Employee{}, errors.New("oops, field required")
 	}
 
 	employee, err := e.repo.CreateEmployee(payload)
@@ -68,8 +72,8 @@ func (e *employeesUseCase) RegisterNewEmployee(payload entity.Employee) (entity.
 
 // UpdateEmployee implements EmployeesUseCase.
 func (e *employeesUseCase) UpdateEmployee(payload entity.Employee) (entity.Employee, error) {
-	if payload.ID == "" ||payload.Name == "" || payload.Password == "" || payload.Role == "" || payload.Division == "" || payload.Position == "" || payload.Contact == "" {
-		return entity.Employee{}, fmt.Errorf("oops, field required")
+	if payload.ID == "" || payload.Name == "" || payload.Password == "" || payload.Role == "" || payload.Division == "" || payload.Position == "" || payload.Contact == "" {
+		return entity.Employee{}, errors.New("oops, field required")
 	}
 
 	employee, err := e.repo.UpdateEmployee(payload)

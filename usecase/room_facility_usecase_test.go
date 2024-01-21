@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"booking-room-app/entity"
-	"booking-room-app/mock/repo_room_facility"
+	"booking-room-app/mock/repo_mock"
 	"booking-room-app/shared/model"
 	"fmt"
 	"net/http"
@@ -25,12 +25,12 @@ var expectedRoomFacility = entity.RoomFacility{
 
 type RoomFacilityUseCaseTestSuite struct {
 	suite.Suite
-	rfrm *repo_room_facility.RoomFacilityRepoMock
+	rfrm *repo_mock.RoomFacilityRepoMock
 	rfuc RoomFacilityUsecase
 }
 
 func (suite *RoomFacilityUseCaseTestSuite) SetupTest() {
-	suite.rfrm = new(repo_room_facility.RoomFacilityRepoMock)
+	suite.rfrm = new(repo_mock.RoomFacilityRepoMock)
 	suite.rfuc = NewRoomFacilityUsecase(suite.rfrm)
 }
 
@@ -39,30 +39,27 @@ func (suite *RoomFacilityUseCaseTestSuite) TestAddRoomFacilityTransaction_Succes
 	availableFacilityQuantity := 10
 	suite.rfrm.On("GetQuantityFacilityByID").Return(availableFacilityQuantity, http.StatusOK, nil)
 	suite.rfrm.On("CreateRoomFacility").Return(expectedRoomFacility, http.StatusCreated, nil)
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusCreated, actualStatusCode)
 	assert.Equal(suite.T(), expectedRoomFacility, actualRoomFacility)
 }
 
 func (suite *RoomFacilityUseCaseTestSuite) TestAddRoomFacilityTransaction_GetQuantityFail() {
 	availableFacilityQuantity := 10
 	suite.rfrm.On("GetQuantityFacilityByID").Return(availableFacilityQuantity, http.StatusBadRequest, fmt.Errorf("failed to get facility quntity"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusBadRequest, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
 func (suite *RoomFacilityUseCaseTestSuite) TestAddRoomFacilityTransaction_InsuffientQuantityFail() {
 	availableFacilityQuantity := 0
 	suite.rfrm.On("GetQuantityFacilityByID").Return(availableFacilityQuantity, http.StatusOK, nil)
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusBadRequest, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -70,10 +67,9 @@ func (suite *RoomFacilityUseCaseTestSuite) TestAddRoomFacilityTransaction_Create
 	availableFacilityQuantity := 10
 	suite.rfrm.On("GetQuantityFacilityByID").Return(availableFacilityQuantity, http.StatusOK, nil)
 	suite.rfrm.On("CreateRoomFacility").Return(expectedRoomFacility, http.StatusInternalServerError, fmt.Errorf("failed to create room-facility"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.AddRoomFacilityTransaction(expectedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -90,10 +86,9 @@ func (suite *RoomFacilityUseCaseTestSuite) TestFindAllRoomFacility_Success() {
 /* Test FindRoomFacilityById Success*/
 func (suite *RoomFacilityUseCaseTestSuite) TestFindRoomFacilityById_Success() {
 	suite.rfrm.On("GetRoomFacilityById").Return(expectedRoomFacility, http.StatusOK, nil)
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.FindRoomFacilityById(expectedRoomFacility.ID)
+	actualRoomFacility, actualErr := suite.rfuc.FindRoomFacilityById(expectedRoomFacility.ID)
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusOK, actualStatusCode)
 	assert.Equal(suite.T(), expectedRoomFacility, actualRoomFacility)
 }
 
@@ -116,19 +111,17 @@ func (suite *RoomFacilityUseCaseTestSuite) TestUpdateRoomFacilityTransaction_Suc
 	}
 	suite.rfrm.On("GetRoomFacilityById").Return(oldRoomFacility, http.StatusOK, nil)
 	suite.rfrm.On("UpdateRoomFacility").Return(expectedRoomFacility, http.StatusOK, nil)
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusOK, actualStatusCode)
 	assert.Equal(suite.T(), expectedRoomFacility, actualRoomFacility)
 }
 
 func (suite *RoomFacilityUseCaseTestSuite) TestUpdateRoomFacilityTransaction_GetRoomFacilityByIDFail() {
 	suite.rfrm.On("GetRoomFacilityById").Return(entity.RoomFacility{}, http.StatusInternalServerError, fmt.Errorf("failed to get room-facility by id"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(expectedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(expectedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -150,10 +143,9 @@ func (suite *RoomFacilityUseCaseTestSuite) TestUpdateRoomFacilityTransaction_Get
 	}
 	suite.rfrm.On("GetRoomFacilityById").Return(oldRoomFacility, http.StatusOK, nil)
 	suite.rfrm.On("GetQuantityFacilityByID").Return(0, http.StatusBadRequest, fmt.Errorf("failed to get quantity facility by id"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusBadRequest, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -175,10 +167,9 @@ func (suite *RoomFacilityUseCaseTestSuite) TestUpdateRoomFacilityTransaction_Ins
 	}
 	suite.rfrm.On("GetRoomFacilityById").Return(oldRoomFacility, http.StatusOK, nil)
 	suite.rfrm.On("GetQuantityFacilityByID").Return(0, http.StatusOK, nil)
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusBadRequest, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -200,10 +191,9 @@ func (suite *RoomFacilityUseCaseTestSuite) TestUpdateRoomFacilityTransaction_Upd
 	}
 	suite.rfrm.On("GetRoomFacilityById").Return(oldRoomFacility, http.StatusOK, nil)
 	suite.rfrm.On("UpdateRoomFacility").Return(entity.RoomFacility{}, http.StatusInternalServerError, fmt.Errorf("failed to update room-facility"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
+	actualRoomFacility, actualErr := suite.rfuc.UpdateRoomFacilityTransaction(postedRoomFacility)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 

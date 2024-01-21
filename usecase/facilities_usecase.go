@@ -31,12 +31,12 @@ func (f *facilitiesUseCase) FindFacilitiesById(id string) (entity.Facilities, er
 // RegisterNewFacilities implements FacilitiesUseCase.
 func (f *facilitiesUseCase) RegisterNewFacilities(payload entity.Facilities) (entity.Facilities, error) {
 	if payload.Name == "" || payload.Quantity <= 0 {
-		return entity.Facilities{}, fmt.Errorf("oppps, required fields")
+		return entity.Facilities{}, fmt.Errorf("oops, field required")
 	}
 
 	facility, err := f.repo.Create(payload)
 	if err != nil {
-		return entity.Facilities{}, fmt.Errorf("opps failed save facility : %v", err)
+		return entity.Facilities{}, fmt.Errorf("oops failed save facility : %v", err)
 	}
 
 	return facility, nil
@@ -45,13 +45,13 @@ func (f *facilitiesUseCase) RegisterNewFacilities(payload entity.Facilities) (en
 // EditFacilitiesById implements FacilitiesUseCase.
 func (f *facilitiesUseCase) EditFacilities(payload entity.Facilities) (entity.Facilities, error) {
 	if payload.Name == "" || payload.Quantity <= 0 {
-		return entity.Facilities{}, fmt.Errorf("oppps, required fields")
+		return entity.Facilities{}, fmt.Errorf("oops, field required")
 	}
 
 	facility, err := f.repo.UpdateById(payload)
 	fmt.Println(facility)
 	if err != nil {
-		return entity.Facilities{}, fmt.Errorf("opps failed save facility : %v", err)
+		return entity.Facilities{}, fmt.Errorf("oops failed save facility : %v", err)
 	}
 
 	return facility, nil

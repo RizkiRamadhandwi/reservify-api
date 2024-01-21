@@ -10,7 +10,7 @@ import (
 
 	"booking-room-app/entity"
 	"booking-room-app/mock/middleware_mock"
-	"booking-room-app/mock/usecase_room_facility"
+	"booking-room-app/mock/usecase_mock"
 	"booking-room-app/shared/model"
 
 	"github.com/gin-gonic/gin"
@@ -31,12 +31,12 @@ var expectedRoomFacility = entity.RoomFacility{
 type RoomFacilityControllerTestSuite struct {
 	suite.Suite
 	rg   *gin.RouterGroup
-	rfum *usecase_room_facility.RoomFacilityUseCaseMock
+	rfum *usecase_mock.RoomFacilityUseCaseMock
 	amm  *middleware_mock.AuthMiddlewareMock
 }
 
 func (suite *RoomFacilityControllerTestSuite) SetupTest() {
-	suite.rfum = new(usecase_room_facility.RoomFacilityUseCaseMock)
+	suite.rfum = new(usecase_mock.RoomFacilityUseCaseMock)
 	router := gin.Default()
 	gin.SetMode(gin.TestMode)
 	suite.rg = router.Group("/api/v1")

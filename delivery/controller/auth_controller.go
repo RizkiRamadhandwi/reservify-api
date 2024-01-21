@@ -18,15 +18,15 @@ type AuthController struct {
 func (a *AuthController) loginHandler(ctx *gin.Context) {
 	var payload dto.AuthRequestDto
 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
+		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
 		return
 	}
 	rsv, err := a.authUc.Login(payload)
 	if err != nil {
-		common.SendErrorResponse(ctx, http.StatusInternalServerError, err.Error())
+		common.SendErrorResponse(ctx, http.StatusBadRequest, err.Error())
 		return
 	}
-	common.SendCreateResponse(ctx, rsv, "Ok")
+	common.SendSingleResponse(ctx, rsv, "Ok")
 }
 
 func (a *AuthController) Route() {

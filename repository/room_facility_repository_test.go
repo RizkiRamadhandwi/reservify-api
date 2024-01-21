@@ -5,7 +5,6 @@ import (
 	"booking-room-app/shared/model"
 	"database/sql"
 	"fmt"
-	"net/http"
 	"testing"
 	"time"
 
@@ -52,29 +51,26 @@ func (suite *RoomFacilityRepositoryTestSuite) TestGetRoomFacilityById_Success() 
 	)
 
 	suite.mockSql.ExpectQuery("SELECT").WithArgs(expectedRoomFacility.ID).WillReturnRows(rows)
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.GetRoomFacilityById(expectedRoomFacility.ID)
+	actualRoomFacility, actualErr := suite.repo.GetRoomFacilityById(expectedRoomFacility.ID)
 
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusOK, actualStatusCode)
 	assert.Equal(suite.T(), actualRoomFacility.RoomId, expectedRoomFacility.RoomId)
 }
 
 /*  GetRoomFacilityById Fail*/
 func (suite *RoomFacilityRepositoryTestSuite) TestGetRoomFacilityById_Fail() {
 	suite.mockSql.ExpectQuery("SELECT").WithArgs("invalid id").WillReturnError(fmt.Errorf("just error"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.GetRoomFacilityById("invalid id")
+	actualRoomFacility, actualErr := suite.repo.GetRoomFacilityById("invalid id")
 
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 
 	suite.mockSql.ExpectQuery("SELECT").WithArgs("id that not found").WillReturnError(sql.ErrNoRows)
-	actualRoomFacility, actualStatusCode, actualErr = suite.repo.GetRoomFacilityById("id that not found")
+	actualRoomFacility, actualErr = suite.repo.GetRoomFacilityById("id that not found")
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusBadRequest, actualStatusCode)
 	assert.Equal(suite.T(), sql.ErrNoRows, actualErr)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
@@ -86,30 +82,27 @@ func (suite *RoomFacilityRepositoryTestSuite) TestGetQuantityFacilityByID_Succes
 		expectedQuantity,
 	)
 	suite.mockSql.ExpectQuery("SELECT").WithArgs("1").WillReturnRows(rows)
-	actualQuantity, actualStatusCode, actualErr := suite.repo.GetQuantityFacilityByID("1")
+	actualQuantity, actualErr := suite.repo.GetQuantityFacilityByID("1")
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusOK, actualStatusCode)
 	assert.Equal(suite.T(), expectedQuantity, actualQuantity)
 }
 
 /* GetQuantityFacilityByID Fail */
 func (suite *RoomFacilityRepositoryTestSuite) TestGetQuantityFacilityByID_Fail() {
 	suite.mockSql.ExpectQuery("SELECT").WithArgs("1").WillReturnError(fmt.Errorf("internal server error"))
-	actualQuantity, actualStatusCode, actualErr := suite.repo.GetQuantityFacilityByID("1")
+	actualQuantity, actualErr := suite.repo.GetQuantityFacilityByID("1")
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), 0, actualQuantity)
 }
 
 /* GetQuantityFacilityByID Fail No rows */
 func (suite *RoomFacilityRepositoryTestSuite) TestGetQuantityFacilityByID_NoRowsFail() {
 	suite.mockSql.ExpectQuery("SELECT").WithArgs("1").WillReturnError(sql.ErrNoRows)
-	actualQuantity, actualStatusCode, actualErr := suite.repo.GetQuantityFacilityByID("1")
+	actualQuantity, actualErr := suite.repo.GetQuantityFacilityByID("1")
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusBadRequest, actualStatusCode)
 	assert.Equal(suite.T(), 0, actualQuantity)
 }
 
@@ -227,20 +220,18 @@ func (suite *RoomFacilityRepositoryTestSuite) TestCreateRoomFacility_Success() {
 	).WillReturnRows(rows)
 	suite.mockSql.ExpectExec(`UPDATE`).WithArgs(5, expectedRoomFacility.FacilityId).WillReturnResult(sqlmock.NewResult(4545, 01101))
 	suite.mockSql.ExpectCommit().WillReturnError(nil)
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
+	actualRoomFacility, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusOK, actualStatusCode)
 	assert.Equal(suite.T(), expectedRoomFacility, actualRoomFacility)
 }
 
 /* Test CreateRoomFacility Fail Begin */
 func (suite *RoomFacilityRepositoryTestSuite) TestCreateRoomFacility_BeginTxFail() {
 	suite.mockSql.ExpectBegin().WillReturnError(fmt.Errorf("failed to begin transaction tx"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
+	actualRoomFacility, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -253,10 +244,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestCreateRoomFacility_InsertFail(
 		expectedRoomFacility.Quantity,
 		expectedRoomFacility.Description,
 	).WillReturnError(fmt.Errorf("failed to insert data"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
+	actualRoomFacility, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -275,10 +265,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestCreateRoomFacility_ReduceQuant
 		expectedRoomFacility.Description,
 	).WillReturnRows(rows)
 	suite.mockSql.ExpectExec("UPDATE").WithArgs(5, expectedRoomFacility.FacilityId).WillReturnError(fmt.Errorf("failed to insert data"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
+	actualRoomFacility, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -299,10 +288,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestCreateRoomFacility_CommitFail(
 	).WillReturnRows(rows)
 	suite.mockSql.ExpectExec("UPDATE").WithArgs(5, expectedRoomFacility.FacilityId).WillReturnResult(sqlmock.NewResult(1, 1))
 	suite.mockSql.ExpectCommit().WillReturnError(fmt.Errorf("failed to commit"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
+	actualRoomFacility, actualErr := suite.repo.CreateRoomFacility(expectedRoomFacility, 5)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -329,10 +317,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestUpdateRoomFacility_Success() {
 
 	suite.mockSql.ExpectCommit().WillReturnError(nil)
 
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
+	actualRoomFacility, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
 	assert.Nil(suite.T(), actualErr)
 	assert.NoError(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusCreated, actualStatusCode)
 	assert.Equal(suite.T(), expectedRoomFacility, actualRoomFacility)
 }
 
@@ -340,10 +327,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestUpdateRoomFacility_Success() {
 func (suite *RoomFacilityRepositoryTestSuite) TestUpdateRoomFacility_BeginFail() {
 	newFacilityQuantity := 5
 	suite.mockSql.ExpectBegin().WillReturnError(fmt.Errorf("failed to begin transaction tx"))
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
+	actualRoomFacility, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -360,10 +346,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestUpdateRoomFacility_UpdateRoomF
 		expectedRoomFacility.ID,
 	).WillReturnError(fmt.Errorf("failed to update data"))
 
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
+	actualRoomFacility, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -388,10 +373,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestUpdateRoomFacility_UpdateFacil
 
 	suite.mockSql.ExpectExec("UPDATE").WithArgs(newFacilityQuantity, expectedRoomFacility.FacilityId).WillReturnError(fmt.Errorf("failed to update facility quantity"))
 
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
+	actualRoomFacility, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
@@ -418,10 +402,9 @@ func (suite *RoomFacilityRepositoryTestSuite) TestUpdateRoomFacility_CommitFail(
 
 	suite.mockSql.ExpectCommit().WillReturnError(fmt.Errorf("failed to commit transaction"))
 
-	actualRoomFacility, actualStatusCode, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
+	actualRoomFacility, actualErr := suite.repo.UpdateRoomFacility(expectedRoomFacility, newFacilityQuantity)
 	assert.NotNil(suite.T(), actualErr)
 	assert.Error(suite.T(), actualErr)
-	assert.Equal(suite.T(), http.StatusInternalServerError, actualStatusCode)
 	assert.Equal(suite.T(), entity.RoomFacility{}, actualRoomFacility)
 }
 
